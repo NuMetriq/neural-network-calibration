@@ -1,5 +1,3 @@
-import math
-
 import torch
 import torch.nn.functional as F
 from calrep.calibrate import apply_temperature
@@ -36,6 +34,24 @@ def test_temperature_scaling_does_not_change_argmax():
     preds_scaled = scaled.argmax(dim=1)
 
     assert torch.equal(preds_raw, preds_scaled)
+
+
+def test_temperature_scaling_handles_confidence_one_edge_case():
+    """
+    This guards against a common ECE binning bug: confidences exactly equal to 1.0
+    can fall outside the last bin depending on binning logic.
+
+    We construct logits that produce softmax confidence extremely close to 1.0 for class 0,
+    and ensure reliability stats still count every sample.
+    """
+    n = 1000
+    logits = torch.tensor([[1000.0, -1000.0]]).repeat(n, 1)  # softmax ~ [1.0, 0.0]
+    y = torch.zeros(n, dtype=torch.long)
+
+    rel = reliability_diagram_stats(logits, y, n_bins=15)
+    assert int(rel.bin_counts.sum()) == n
+    assert rel.ece >= 0.0
+    assert rel.mce >= 0.0
 
 
 def test_ece_near_zero_for_perfect_calibration_binary():
