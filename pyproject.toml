@@ -9,7 +9,7 @@ description = "PyTorch replication of On Calibration of Modern Neural Networks (
 readme = "README.md"
 requires-python = ">=3.10"
 authors = [
-    { name = "Your Name" }
+    { name = "Kent Rainey Biler" }
 ]
 
 dependencies = [
