@@ -1,8 +1,8 @@
+# src/calrep/utils.py
 from __future__ import annotations
 
-from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, Union
 
 import yaml
 
