@@ -13,6 +13,9 @@ __pycache__/
 .vscode/
 .idea/
 
+# Datasets
+data/
+
 # Outputs/artifacts
 outputs/
 wandb/
