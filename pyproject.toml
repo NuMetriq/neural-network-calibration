@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "calrep"
+version = "0.1.0"
+description = "PyTorch replication of On Calibration of Modern Neural Networks (Guo et al., 2017)"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+    { name = "Your Name" }
+]
+
+dependencies = [
+    "torch",
+    "torchvision",
+    "numpy",
+    "matplotlib",
+    "scikit-learn",
+    "pyyaml",
+    "tqdm"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "black",
+    "ruff"
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]

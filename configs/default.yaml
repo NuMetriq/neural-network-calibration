@@ -1,0 +1,27 @@
+project: calrep
+seed: 1337
+device: auto  # auto|cpu|cuda
+
+dataset:
+  name: cifar100  # cifar10|cifar100
+  data_dir: data
+  val_fraction: 0.1
+  num_workers: 4
+
+train:
+  batch_size: 128
+  epochs: 50
+  lr: 0.1
+  momentum: 0.9
+  weight_decay: 0.0005
+
+model:
+  name: resnet18
+  pretrained: false
+
+eval:
+  ece_bins: 15
+  save_logits: true
+
+outputs:
+  root: outputs
