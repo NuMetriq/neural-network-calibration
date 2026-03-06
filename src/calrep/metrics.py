@@ -28,6 +28,47 @@ def nll_from_logits(logits: torch.Tensor, y: torch.Tensor) -> float:
     return float(F.cross_entropy(logits, y).item())
 
 
+def adaptive_ece(
+    logits: torch.Tensor,
+    y: torch.Tensor,
+    n_bins: int = 15,
+) -> float:
+    """
+    Adaptive ECE (ACE): equal-count (quantile) bins over confidence.
+    This reduces sensitivity to confidence density compared to equal-width ECE.
+
+    Returns a single scalar ACE.
+    """
+    probs = torch.softmax(logits, dim=1)
+    conf, preds = torch.max(probs, dim=1)
+    correct = (preds == y).float()
+
+    conf_np = conf.detach().cpu().numpy()
+    correct_np = correct.detach().cpu().numpy()
+
+    n = conf_np.shape[0]
+    if n == 0:
+        raise ValueError("Empty inputs")
+
+    # Sort by confidence
+    order = conf_np.argsort()
+    conf_sorted = conf_np[order]
+    corr_sorted = correct_np[order]
+
+    # Split into equal-count bins (last bin may be slightly larger)
+    bins = np.array_split(np.arange(n), n_bins)
+
+    ace = 0.0
+    for idx in bins:
+        if idx.size == 0:
+            continue
+        acc_b = float(corr_sorted[idx].mean())
+        conf_b = float(conf_sorted[idx].mean())
+        ace += (idx.size / n) * abs(acc_b - conf_b)
+
+    return float(ace)
+
+
 def brier_multiclass_from_logits(logits: torch.Tensor, y: torch.Tensor) -> float:
     """
     Multiclass Brier score (mean squared error between probs and one-hot labels).
@@ -129,6 +170,9 @@ def compute_metrics(
         "mce": rel.mce,
         "ece_bins": float(n_bins),
     }
+
+    out["ace"] = adaptive_ece(logits, y, n_bins=n_bins)
+
     if include_brier:
         out["brier"] = brier_multiclass_from_logits(logits, y)
     return out

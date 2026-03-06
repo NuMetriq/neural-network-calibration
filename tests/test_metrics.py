@@ -2,6 +2,7 @@ import torch
 import torch.nn.functional as F
 from calrep.calibrate import apply_temperature
 from calrep.metrics import (
+    adaptive_ece,
     compute_metrics,
     nll_from_logits,
     reliability_diagram_stats,
@@ -15,6 +16,30 @@ def test_nll_matches_torch_cross_entropy():
     a = nll_from_logits(logits, y)
     b = float(F.cross_entropy(logits, y).item())
     assert abs(a - b) < 1e-12
+
+
+def test_ace_near_zero_for_perfect_calibration_binary():
+    torch.manual_seed(0)
+    n = 20000
+    p = torch.empty(n)
+    p[: n // 2] = 0.8
+    p[n // 2 :] = 0.2
+    y = torch.bernoulli(p).long()
+
+    logit = torch.log(p / (1.0 - p))
+    logits = torch.stack([torch.zeros(n), logit], dim=1)
+
+    ace = adaptive_ece(logits, y, n_bins=15)
+    assert ace < 0.01
+
+
+def test_ace_large_for_confidently_wrong_predictions():
+    n = 5000
+    logits = torch.tensor([[10.0, -10.0]]).repeat(n, 1)
+    y = torch.ones(n, dtype=torch.long)
+
+    ace = adaptive_ece(logits, y, n_bins=15)
+    assert ace > 0.9
 
 
 def test_reliability_bin_counts_sum_to_n():
