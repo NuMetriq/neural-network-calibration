@@ -7,6 +7,19 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
+def plot_ece_vs_bins(bins, raw_ece, temp_ece, title, out_path: Path) -> None:
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    plt.figure()
+    plt.plot(bins, raw_ece, marker="o")
+    plt.plot(bins, temp_ece, marker="o")
+    plt.xlabel("Number of bins")
+    plt.ylabel("ECE")
+    plt.title(title)
+    plt.tight_layout()
+    plt.savefig(out_path, dpi=200)
+    plt.close()
+
+
 def plot_reliability(
     bin_edges: np.ndarray,
     bin_acc: np.ndarray,

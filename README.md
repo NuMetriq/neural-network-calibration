@@ -69,6 +69,12 @@ Produces:
 - `outputs/reports/metrics_temp.json`
 - `outputs/figures/reliability_temp.png`
 
+### ECE sensitivity to bin count
+
+Temperature scaling improves calibration across a range of bin counts.
+
+![ECE vs bins](assets/ece_vs_bins.png)
+
 ## Testing
 
 ```bash

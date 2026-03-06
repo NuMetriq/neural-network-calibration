@@ -42,6 +42,40 @@ def main():
     val_logits_t = apply_temperature(val_logits, fit.temperature)
     test_logits_t = apply_temperature(test_logits, fit.temperature)
 
+    from calrep.metrics import ece_sweep
+
+    raw = json.load(open(reports_dir / "metrics_raw.json", "r", encoding="utf-8"))
+
+    ece_bins = [5, 10, 15, 20, 30, 50]
+    raw_ece = ece_sweep(test_logits, test_y, bins_list=ece_bins)
+    temp_ece = ece_sweep(test_logits_t, test_y, bins_list=ece_bins)
+
+    sweep_out = {
+        "bins": ece_bins,
+        "raw_test_ece": raw_ece,
+        "temp_test_ece": temp_ece,
+        "temperature": fit.temperature,
+    }
+    with (reports_dir / "ece_sweep.json").open("w", encoding="utf-8") as f:
+        json.dump(sweep_out, f, indent=2, sort_keys=True)
+
+    from calrep.plotting import plot_ece_vs_bins
+
+    bins = ece_bins
+    raw_vals = [raw_ece[b] for b in bins]
+    temp_vals = [temp_ece[b] for b in bins]
+    plot_ece_vs_bins(
+        bins,
+        raw_vals,
+        temp_vals,
+        "ECE vs #bins (Test)",
+        figures_dir / "ece_vs_bins.png",
+    )
+
+    print("\nECE vs bins (test)")
+    for b in ece_bins:
+        print(f"  bins={b:2d}: {raw_ece[b]:.4f} -> {temp_ece[b]:.4f}")
+
     temp_preds = test_logits_t.argmax(dim=1)
     acc_same = bool(torch.equal(raw_preds, temp_preds))
 

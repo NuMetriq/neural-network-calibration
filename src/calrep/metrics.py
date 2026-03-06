@@ -38,6 +38,18 @@ def brier_multiclass_from_logits(logits: torch.Tensor, y: torch.Tensor) -> float
     return float(torch.mean(torch.sum((probs - y_onehot) ** 2, dim=1)).item())
 
 
+def ece_sweep(
+    logits: torch.Tensor,
+    y: torch.Tensor,
+    bins_list=(5, 10, 15, 20, 30, 50),
+) -> Dict[int, float]:
+    out = {}
+    for b in bins_list:
+        rel = reliability_diagram_stats(logits, y, n_bins=int(b))
+        out[int(b)] = float(rel.ece)
+    return out
+
+
 def reliability_diagram_stats(
     logits: torch.Tensor,
     y: torch.Tensor,
